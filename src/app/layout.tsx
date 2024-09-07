@@ -8,6 +8,8 @@ import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { Modals } from "@/components/Modals";
 import { Toaster } from "@/components/ui/sonner";
 
+import { JotaiProvider } from "@/components/JotaiProvider";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -25,9 +27,11 @@ export default function RootLayout({
       <html lang="en">
         <body className={inter.className}>
           <ConvexClientProvider>
-            <Toaster />
-            <Modals />
-            {children}
+            <JotaiProvider>
+              <Toaster />
+              <Modals />
+              {children}
+            </JotaiProvider>
           </ConvexClientProvider>
         </body>
       </html>
