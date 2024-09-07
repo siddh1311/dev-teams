@@ -11,7 +11,6 @@ import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
 import { useCreateWorkspaceModal } from "@/features/workspaces/store/use-create-workspace-modal";
 import { Loader, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const WorkspaceSwitcher = () => {
@@ -25,14 +24,6 @@ const WorkspaceSwitcher = () => {
   });
   const { data: workspaces, isLoading: workspacesLoading } = useGetWorkspaces();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return null;
-  }
-
   // Filter out the current workspace from the list of workspaces, so that we
   // don't show the current workspace in the dropdown menu.
   const filteredWorkspaces = workspaces?.filter(
@@ -41,7 +32,7 @@ const WorkspaceSwitcher = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
         <Button className="size-9 relative overflow-hidden bg-[#ABABAD] hover:bg-[#ABABAD]/80 text-slate-800 font-semibold text-xl">
           {workspaceLoading ? (
             <Loader className="size-5 animate-spin shrink-0" />
