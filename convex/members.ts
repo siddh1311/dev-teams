@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { auth } from "./auth";
 import { Id } from "./_generated/dataModel";
 import { query, QueryCtx } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 const populateUser = (ctx: QueryCtx, id: Id<"users">) => {
   return ctx.db.get(id);
@@ -12,7 +12,7 @@ export const get = query({
     workspaceId: v.id("workspaces"),
   },
   handler: async (ctx, args) => {
-    const userId = await auth.getUserId(ctx);
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
       return [];
     }
@@ -52,7 +52,7 @@ export const get = query({
 export const current = query({
   args: { workspaceId: v.id("workspaces") },
   handler: async (ctx, args) => {
-    const userId = await auth.getUserId(ctx);
+    const userId = await getAuthUserId(ctx);
 
     if (!userId) {
       // For queries, I won't throw an error, just return an empty array
