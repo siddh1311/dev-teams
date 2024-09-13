@@ -1,17 +1,68 @@
-import { useEffect, useRef } from "react";
+import {
+  MutableRefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { PiTextAa } from "react-icons/pi";
 import { MdSend } from "react-icons/md";
 import { ImageIcon, Smile } from "lucide-react";
 
 import Quill, { QuillOptions } from "quill";
+import { Delta, Op } from "quill/core";
 import "quill/dist/quill.snow.css";
 
 import { Button } from "./ui/button";
 import Hint from "./Hint";
 
-const Editor = () => {
+import { cn } from "@/lib/utils";
+
+type EditorValue = { image: File | null; body: string };
+
+interface EditorProps {
+  variant?: "create" | "update";
+  onSubmit: ({ image, body }: EditorValue) => void;
+  onCancel?: () => void;
+  placeholder?: string;
+  defaultValue?: Delta | Op[];
+  disabled?: boolean;
+  innerRef?: MutableRefObject<Quill | null>;
+}
+
+const Editor = ({
+  variant = "create",
+  onSubmit,
+  onCancel,
+  placeholder = "Type something...",
+  defaultValue = [],
+  disabled = false,
+  innerRef,
+}: EditorProps) => {
+  /**
+   * From Quill official docs.
+   * If we just pass `onSubmit`, `placeholder`, etc. to `useEffect`, we need to add them to the dependency array
+   * which can cause render issues.
+   * So we use them with `useRef` and pass them to `useLayoutEffect`.
+   **/
+
+  const [text, setText] = useState("");
+  const [toolbarVisible, setToolbarVisible] = useState(true);
+
   const containerRef = useRef<HTMLDivElement>(null);
+  const submitRef = useRef(onSubmit);
+  const placeholderRef = useRef(placeholder);
+  const disabledRef = useRef(disabled);
+  const defaultValueRef = useRef(defaultValue);
+  const quillRef = useRef<Quill | null>(null);
+
+  useLayoutEffect(() => {
+    submitRef.current = onSubmit;
+    placeholderRef.current = placeholder;
+    defaultValueRef.current = defaultValue;
+    disabledRef.current = disabled;
+  });
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -23,27 +74,87 @@ const Editor = () => {
 
     const options: QuillOptions = {
       theme: "snow",
+      placeholder: placeholderRef.current,
+      modules: {
+        toolbar: [
+          ["bold", "italic", "strike"],
+          ["link"],
+          [{ list: "ordered" }, { list: "bullet" }],
+        ],
+        keyboard: {
+          bindings: {
+            enter: {
+              key: "Enter",
+              handler: () => {
+                // TODO: submit form
+                return;
+              },
+            },
+            shift_enter: {
+              key: "Enter",
+              shiftKey: true,
+              handler: () => {
+                quill.insertText(quill.getSelection()?.index || 0, "\n");
+              },
+            },
+          },
+        },
+      },
     };
 
-    new Quill(editorContainer, options);
+    const quill = new Quill(editorContainer, options);
+    quillRef.current = quill;
+    quillRef.current.focus();
+
+    if (innerRef) {
+      innerRef.current = quill;
+    }
+
+    quill.setContents(defaultValueRef.current);
+    setText(quill.getText());
+
+    quill.on(Quill.events.TEXT_CHANGE, () => {
+      setText(quill.getText());
+    });
 
     return () => {
+      quill.off(Quill.events.TEXT_CHANGE);
       if (container) {
         container.innerHTML = "";
       }
+
+      if (quillRef.current) {
+        quillRef.current = null;
+      }
+
+      if (innerRef) {
+        innerRef.current = null;
+      }
     };
-  }, []);
+  }, [innerRef]);
+
+  const toggleToolbar = () => {
+    setToolbarVisible(!toolbarVisible);
+    const toolbarElement = containerRef.current?.querySelector(".ql-toolbar");
+
+    if (toolbarElement) {
+      toolbarElement.classList.toggle("hidden");
+    }
+  };
+
+  const isEmpty = text.replace(/<(.|\n)*?>/g, "").trim().length === 0;
+
   return (
     <div className="flex flex-col">
       <div className="flex flex-col border border-slate-200 rounded-md overflow-hidden focus-within:border-slate-300 focus-within:shadow-sm transition bg-white">
         <div ref={containerRef} className="h-full ql-custom" />
         <div className="flex px-2 pb-2 z-[5]">
-          <Hint label="Hide Formatting">
+          <Hint label={toolbarVisible ? "Hide formatting" : "Show formatting"}>
             <Button
-              disabled={false}
+              disabled={disabled}
               size="iconSm"
               variant={"ghost"}
-              onClick={() => {}}
+              onClick={toggleToolbar}
             >
               <PiTextAa className="size-4" />
             </Button>
@@ -51,7 +162,7 @@ const Editor = () => {
 
           <Hint label="Emoji">
             <Button
-              disabled={false}
+              disabled={disabled}
               size="iconSm"
               variant={"ghost"}
               onClick={() => {}}
@@ -59,26 +170,55 @@ const Editor = () => {
               <Smile className="size-4" />
             </Button>
           </Hint>
+          {variant === "create" && (
+            <Hint label="Image">
+              <Button
+                disabled={disabled}
+                size="iconSm"
+                variant={"ghost"}
+                onClick={() => {}}
+              >
+                <ImageIcon className="size-4" />
+              </Button>
+            </Hint>
+          )}
 
-          <Hint label="Image">
+          {variant === "update" && (
+            <div className="ml-auto flex items-center gap-x-2">
+              <Button
+                variant={"outline"}
+                size="sm"
+                onClick={() => {}}
+                disabled={disabled}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={disabled || isEmpty}
+                onClick={() => {}}
+                size="sm"
+                className="bg-[#007a5a] hover:bg-[#007a5a]/80 text-white"
+              >
+                Save
+              </Button>
+            </div>
+          )}
+
+          {variant === "create" && (
             <Button
-              disabled={false}
-              size="iconSm"
-              variant={"ghost"}
+              disabled={disabled || isEmpty}
               onClick={() => {}}
+              size="iconSm"
+              className={cn(
+                "ml-auto",
+                isEmpty
+                  ? "bg-white hover:bg-white text-muted-foreground"
+                  : "bg-[#007a5a] hover:bg-[#007a5a]/80 text-white"
+              )}
             >
-              <ImageIcon className="size-4" />
+              <MdSend className="size-4" />
             </Button>
-          </Hint>
-
-          <Button
-            disabled={false}
-            onClick={() => {}}
-            size="iconSm"
-            className="ml-auto bg-[#007a5a] hover:bg-[#007a5a]/80 text-white"
-          >
-            <MdSend className="size-4" />
-          </Button>
+          )}
         </div>
       </div>
 
