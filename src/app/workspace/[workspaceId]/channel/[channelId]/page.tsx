@@ -45,6 +45,7 @@ const ChannelId = () => {
         channelCreationTime={channel._creationTime}
         data={results}
         loadMore={loadMore}
+        variant="channel"
         isLoadingMore={status === "LoadingMore"}
         canLoadMore={status === "CanLoadMore"}
       />
