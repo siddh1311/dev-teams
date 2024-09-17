@@ -5,7 +5,7 @@ import { Doc, Id } from "../../convex/_generated/dataModel";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 import Hint from "./Hint";
-import { update } from "../../convex/channels";
+import { Thumbnail } from "./Thumbnail";
 
 const Renderer = dynamic(() => import("@/components/Renderer"), { ssr: false });
 
@@ -68,6 +68,7 @@ export const Message = ({
           </Hint>
           <div className="flex flex-col w-full">
             <Renderer value={body} />
+            <Thumbnail url={image} />
             {updatedAt ? (
               <span className="text-xs text-muted-foreground">(edited)</span>
             ) : null}
@@ -104,6 +105,7 @@ export const Message = ({
             </Hint>
           </div>
           <Renderer value={body} />
+          <Thumbnail url={image} />
           {updatedAt ? (
             <span className="text-xs text-muted-foreground">(edited)</span>
           ) : null}
