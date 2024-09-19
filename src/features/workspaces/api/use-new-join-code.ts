@@ -13,15 +13,6 @@ type Optons = {
   throwError?: boolean;
 };
 
-/**
- * A hook to update a workspace.
- *
- * @returns
- * - `mutate`: The mutation function to update the workspace.
- * - `data`: The response from the mutation.
- * - `error`: An error if the mutation fails.
- * - `isPending`, `isSuccess`, `isError`, `isSettled`: States of the mutation.
- */
 export const useNewJoinCode = () => {
   const [data, setData] = useState<ResponseType>(null);
   const [error, setError] = useState<Error | null>(null);

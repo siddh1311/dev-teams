@@ -3,7 +3,10 @@ import { api } from "../../../../convex/_generated/api";
 import { useCallback, useMemo, useState } from "react";
 import { Id } from "../../../../convex/_generated/dataModel";
 
-type ResponseType = string | null;
+type RequestType = {
+  id: Id<"messages">;
+};
+type ResponseType = Id<"messages"> | null;
 
 type Optons = {
   onSuccess?: (data: ResponseType) => void;
@@ -12,7 +15,7 @@ type Optons = {
   throwError?: boolean;
 };
 
-export const useGenerateUploadUrl = () => {
+export const useRemoveMessage = () => {
   const [data, setData] = useState<ResponseType>(null);
   const [error, setError] = useState<Error | null>(null);
 
@@ -25,17 +28,17 @@ export const useGenerateUploadUrl = () => {
   const isError = useMemo(() => status === "error", [status]);
   const isSettled = useMemo(() => status === "settled", [status]);
 
-  const mutation = useMutation(api.upload.generateUploadUrl);
+  const mutation = useMutation(api.messages.remove);
 
   const mutate = useCallback(
-    async (_values: {}, options?: Optons) => {
+    async (values: RequestType, options?: Optons) => {
       try {
         // Resetting all the states
         setData(null);
         setError(null);
         setStatus("pending");
 
-        const response = await mutation();
+        const response = await mutation(values);
         options?.onSuccess?.(response);
 
         return response;

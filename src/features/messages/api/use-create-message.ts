@@ -21,7 +21,7 @@ type Optons = {
 };
 
 /**
- * A hook to create a workspace.
+ * A hook to create a message.
  *
  * @returns
  * - `mutate`: The mutation function to create the workspace.
