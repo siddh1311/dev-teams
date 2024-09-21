@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Id } from "../../convex/_generated/dataModel";
+import { Loader } from "lucide-react";
 import { differenceInMinutes, format, isToday, isYesterday } from "date-fns";
 
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
@@ -8,8 +10,7 @@ import { useCurrentMember } from "@/features/members/api/use-current-member";
 
 import { Message } from "./Message";
 import { ChannelHero } from "./ChannelHero";
-import { Id } from "../../convex/_generated/dataModel";
-import { Loader } from "lucide-react";
+import { ConversationHero } from "./ConversationHero";
 
 // 5 minutes until we fallback to non-compact message
 const TIME_THRESHOLD = 5;
@@ -136,6 +137,9 @@ export const MessageList = ({
       )}
       {variant === "channel" && channelName && channelCreationTime && (
         <ChannelHero name={channelName} creationTime={channelCreationTime} />
+      )}
+      {variant === "conversation" && (
+        <ConversationHero name={memberName} image={memberImage} />
       )}
     </div>
   );
